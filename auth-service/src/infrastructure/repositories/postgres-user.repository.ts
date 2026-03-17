@@ -21,9 +21,20 @@ export class PostgresUserRepository implements UserRepository {
             email: user.email,
             name: user.name,
             passwordHash: user.passwordHash,
+            role: user.role,
             createdAt: user.createdAt,
         }).returning();
         if (!result[0]) throw new Error("Failed to insert user");
+        return this.toDomain(result[0]);
+    }
+
+    async updateRole(id: string, role: "admin" | "doctor" | "invited"): Promise<User> {
+        const result = await db.update(users)
+            .set({ role })
+            .where(eq(users.id, id))
+            .returning();
+            
+        if (!result[0]) throw new Error("User not found or failed to update role");
         return this.toDomain(result[0]);
     }
 
@@ -33,6 +44,7 @@ export class PostgresUserRepository implements UserRepository {
             email: row.email,
             name: row.name,
             passwordHash: row.passwordHash,
+            role: row.role as "admin" | "doctor" | "invited",
             createdAt: row.createdAt!,
         };
     }

@@ -1,4 +1,4 @@
-.PHONY: db-up db-push db-rollback dev
+.PHONY: db-up db-push db-rollback dev build clean
 
 db-up:
 	docker compose up -d
@@ -14,3 +14,9 @@ db-rollback:
 
 dev:
 	bun run src/index.ts
+
+build:
+	bun build --compile --minify --sourcemap ./src/index.ts --outfile auth-service
+
+clean:
+	rm -f auth-service index.js.map

@@ -9,7 +9,16 @@ export class RegisterUseCase {
         const existing = await this.userRepo.findByEmail(dto.email);
         if (existing) throw new ConflictError("Email already registered");
         const passwordHash = await Bun.password.hash(dto.password, { algorithm: "bcrypt", cost: 12 });
-        const user: User = { id: crypto.randomUUID(), email: dto.email, name: dto.name, passwordHash, createdAt: new Date() };
+
+        const user: User = { 
+            id: crypto.randomUUID(), 
+            email: dto.email, 
+            name: dto.name, 
+            passwordHash, 
+            role: "invited", 
+            createdAt: new Date() 
+        };
+
         const saved = await this.userRepo.save(user);
         const { passwordHash: _, ...safeUser } = saved;
         return safeUser;

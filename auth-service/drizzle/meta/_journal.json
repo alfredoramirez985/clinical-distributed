@@ -8,6 +8,13 @@
       "when": 1773626226185,
       "tag": "0000_glossy_la_nuit",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1773691452929,
+      "tag": "0001_illegal_white_tiger",
+      "breakpoints": true
     }
   ]
 }
