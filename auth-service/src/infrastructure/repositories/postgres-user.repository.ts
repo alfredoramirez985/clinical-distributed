@@ -1,22 +1,24 @@
 import { eq } from "drizzle-orm";
 import type { User } from "../../domain/entities/user";
 import type { UserRepository } from "../../domain/repositories/user.repository";
-import { db } from "../database/database";
+import { db, type DbClient } from "../database/database";
 import { users } from "../database/schema";
 
 export class PostgresUserRepository implements UserRepository {
+    constructor(private dbClient: DbClient = db) {}
+
     async findByEmail(email: string): Promise<User | null> {
-        const result = await db.select().from(users).where(eq(users.email, email));
+        const result = await this.dbClient.select().from(users).where(eq(users.email, email));
         return result[0] ? this.toDomain(result[0]) : null;
     }
 
     async findById(id: string): Promise<User | null> {
-        const result = await db.select().from(users).where(eq(users.id, id));
+        const result = await this.dbClient.select().from(users).where(eq(users.id, id));
         return result[0] ? this.toDomain(result[0]) : null;
     }
 
     async save(user: User): Promise<User> {
-        const result = await db.insert(users).values({
+        const result = await this.dbClient.insert(users).values({
             id: user.id,
             email: user.email,
             name: user.name,
@@ -29,7 +31,7 @@ export class PostgresUserRepository implements UserRepository {
     }
 
     async updateRole(id: string, role: "admin" | "doctor" | "invited"): Promise<User> {
-        const result = await db.update(users)
+        const result = await this.dbClient.update(users)
             .set({ role })
             .where(eq(users.id, id))
             .returning();

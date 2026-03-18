@@ -15,6 +15,13 @@
       "when": 1773691452929,
       "tag": "0001_illegal_white_tiger",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1773858203979,
+      "tag": "0002_create_outbox_events",
+      "breakpoints": true
     }
   ]
 }

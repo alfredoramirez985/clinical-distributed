@@ -1,38 +1,41 @@
 
-import type { UserRepository } from "../../domain/repositories/user.repository";
 import type { User } from "../../domain/entities/user";
 import { ConflictError } from "../../interface/http/middlewares/error.middleware";
-import { publishUserEvent } from "../../infrastructure/redis/redis";
+import type { UnitOfWork } from "../ports/unit-of-work";
 
 class RegisterUseCase {
-    constructor(private userRepo: UserRepository) { }
+    constructor(private uow: UnitOfWork) {}
+
     async execute(dto: any): Promise<Omit<User, "passwordHash">> {
-        const existing = await this.userRepo.findByEmail(dto.email);
-        if (existing) throw new ConflictError("Email already registered");
-        const passwordHash = await Bun.password.hash(dto.password, { algorithm: "bcrypt", cost: 12 });
+        return await this.uow.execute(async ({ userRepo, events }) => {
+            const existing = await userRepo.findByEmail(dto.email);
+            if (existing) throw new ConflictError("Email already registered");
 
-        const user: User = { 
-            id: crypto.randomUUID(), 
-            email: dto.email, 
-            name: dto.name, 
-            passwordHash, 
-            role: "invited", 
-            createdAt: new Date() 
-        };
+            const passwordHash = await Bun.password.hash(dto.password, { algorithm: "bcrypt", cost: 12 });
 
-        const saved = await this.userRepo.save(user);
-        const { passwordHash: _, ...safeUser } = saved;
+            const user: User = {
+                id: crypto.randomUUID(),
+                email: dto.email,
+                name: dto.name,
+                passwordHash,
+                role: "invited",
+                createdAt: new Date(),
+            };
 
-        // Publish user data to Redis for other services to replicate
-        await publishUserEvent({
-            id: safeUser.id,
-            email: safeUser.email,
-            name: safeUser.name,
-            role: safeUser.role,
-            createdAt: safeUser.createdAt.toISOString(),
+            const saved = await userRepo.save(user);
+            const { passwordHash: _, ...safeUser } = saved;
+
+            // Emit domain event for UoW to persist to outbox automatically
+            events.publish("user", safeUser.id, "user.registered", {
+                id: safeUser.id,
+                email: safeUser.email,
+                name: safeUser.name,
+                role: safeUser.role,
+                createdAt: safeUser.createdAt.toISOString(),
+            });
+
+            return safeUser;
         });
-
-        return safeUser;
     }
 }
 
