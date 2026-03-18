@@ -3,7 +3,7 @@ import type { UserRepository } from "../../domain/repositories/user.repository";
 import type { User } from "../../domain/entities/user";
 import { UnauthorizedError } from "../../interface/http/middlewares/error.middleware";
 
-export class LoginUseCase {
+class LoginUseCase {
     constructor(private userRepo: UserRepository) { }
 
     async execute(dto: any): Promise<Omit<User, "passwordHash">> {
@@ -21,3 +21,5 @@ export class LoginUseCase {
         return safeUser;
     }
 }
+
+export { LoginUseCase };

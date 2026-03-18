@@ -2,8 +2,9 @@
 import type { UserRepository } from "../../domain/repositories/user.repository";
 import type { User } from "../../domain/entities/user";
 import { ConflictError } from "../../interface/http/middlewares/error.middleware";
+import { publishUserEvent } from "../../infrastructure/redis/redis";
 
-export class RegisterUseCase {
+class RegisterUseCase {
     constructor(private userRepo: UserRepository) { }
     async execute(dto: any): Promise<Omit<User, "passwordHash">> {
         const existing = await this.userRepo.findByEmail(dto.email);
@@ -21,6 +22,18 @@ export class RegisterUseCase {
 
         const saved = await this.userRepo.save(user);
         const { passwordHash: _, ...safeUser } = saved;
+
+        // Publish user data to Redis for other services to replicate
+        await publishUserEvent({
+            id: safeUser.id,
+            email: safeUser.email,
+            name: safeUser.name,
+            role: safeUser.role,
+            createdAt: safeUser.createdAt.toISOString(),
+        });
+
         return safeUser;
     }
 }
+
+export { RegisterUseCase };

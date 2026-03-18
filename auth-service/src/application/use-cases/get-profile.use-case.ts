@@ -3,7 +3,7 @@ import type { UserRepository } from "../../domain/repositories/user.repository";
 import type { User } from "../../domain/entities/user";
 import { NotFoundError } from "../../interface/http/middlewares/error.middleware";
 
-export class GetProfileUseCase {
+class GetProfileUseCase {
     constructor(private userRepo: UserRepository) { }
 
     async execute(userId: string): Promise<Omit<User, "passwordHash">> {
@@ -16,3 +16,5 @@ export class GetProfileUseCase {
         return safeUser;
     }
 }
+
+export { GetProfileUseCase };
