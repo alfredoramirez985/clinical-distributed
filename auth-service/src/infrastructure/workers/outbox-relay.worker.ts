@@ -15,8 +15,17 @@ export function startOutboxRelayWorker(): void {
 
             for (const event of pending) {
                 try {
-                    const payload = event.payload as Record<string, unknown>;
-                    await publisher.publish(CHANNEL, JSON.stringify(payload));
+                    // Publish the FULL envelope, not just the payload
+                    const envelope = {
+                        eventId: event.id,
+                        aggregateType: event.aggregateType,
+                        aggregateId: event.aggregateId,
+                        eventType: event.eventType,
+                        payload: event.payload,
+                        timestamp: new Date().toISOString()
+                    };
+                    
+                    await publisher.publish(CHANNEL, JSON.stringify(envelope));
                     await outboxRepo.markProcessed(event.id);
                     console.log(`[OutboxRelay] Published and marked processed: ${event.eventType} for aggregate ${event.aggregateId}`);
                 } catch (err) {
