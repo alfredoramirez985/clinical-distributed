@@ -28,3 +28,13 @@ output "redis_port" {
   description = "ElastiCache Redis port"
   value       = aws_elasticache_cluster.redis.port
 }
+
+output "eks_cluster_name" {
+  description = "EKS cluster name — use with: aws eks update-kubeconfig --name <value>"
+  value       = aws_eks_cluster.main.name
+}
+
+output "eks_cluster_endpoint" {
+  description = "EKS API server endpoint"
+  value       = aws_eks_cluster.main.endpoint
+}
