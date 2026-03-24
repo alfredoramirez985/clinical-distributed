@@ -9,8 +9,10 @@ import { GetProfileUseCase } from "./application/use-cases/get-profile.use-case"
 import { UpgradeUserRoleUseCase } from "./application/use-cases/upgrade-user-role.use-case";
 import { authRoutes } from "./interface/http/routes/auth.routes";
 import { errorMiddleware } from "./interface/http/middlewares/error.middleware";
+import { metricsMiddleware } from "./interface/http/middlewares/metrics.middleware";
 import { startOutboxRelayWorker } from "./infrastructure/workers/outbox-relay.worker";
 import { PostgresUnitOfWork } from "./infrastructure/repositories/postgres-unit-of-work";
+import { setupOutboxTriggers } from "./infrastructure/database/setup-triggers";
 
 const userRepository = new PostgresUserRepository();
 const outboxRepository = new OutboxRepository(); // if still needed explicitly
@@ -21,7 +23,7 @@ const loginUseCase = new LoginUseCase(userRepository);
 const getProfileUseCase = new GetProfileUseCase(userRepository);
 const upgradeUserRoleUseCase = new UpgradeUserRoleUseCase(unitOfWork);
 
-import { setupOutboxTriggers } from "./infrastructure/database/setup-triggers";
+
 
 // Run triggers configuration on startup
 await setupOutboxTriggers();
@@ -31,6 +33,7 @@ startOutboxRelayWorker();
 
 const app = new Elysia()
     .use(cors())
+    .use(metricsMiddleware)
     .use(errorMiddleware)
     .use(swagger({
         documentation: {
