@@ -21,6 +21,11 @@ const loginUseCase = new LoginUseCase(userRepository);
 const getProfileUseCase = new GetProfileUseCase(userRepository);
 const upgradeUserRoleUseCase = new UpgradeUserRoleUseCase(unitOfWork);
 
+import { setupOutboxTriggers } from "./infrastructure/database/setup-triggers";
+
+// Run triggers configuration on startup
+await setupOutboxTriggers();
+
 // Start the outbox relay worker — polls DB and publishes to Redis
 startOutboxRelayWorker();
 
